@@ -1,5 +1,27 @@
 #!/bin/bash -e
 
+# All credit https://github.com/twe4ked/catacomb
+
+usage()
+{
+cat <<EOF
+
+Encrypts content using the nominated public key, either found locally
+or otherwise sourced from GitHub.
+Encrypted files can then be decrypted using the matching ~/.ssh/id_rsa.
+
+Options:
+  --help       Print this help message.
+
+Encrypting:
+    catacomb $RECIPIENTS_GITHUB_USERNAME < file.txt > encrypted.txt
+
+Decrypting:
+    catacomb < encrypted.txt
+
+EOF
+}
+
 main() {
   if [[ -n "$1" ]]; then
     PUBLIC_KEY="$HOME/.ssh/$1.pub"
@@ -12,7 +34,7 @@ main() {
     trap '{ rm -f "$TMP_OUT"; }' EXIT
 
     if openssl rsautl -encrypt -pubin -inkey <(ssh-keygen -f "$PUBLIC_KEY" -e -m PKCS8) -ssl > "$TMP_OUT"; then
-      echo "-- encrypted with catacomb <https://github.com/twe4ked/catacomb>"
+      echo "-- encrypted with catacomb <https://github.com/jcdarwin/catacomb>"
       openssl base64 < "$TMP_OUT"
     fi
   else
@@ -29,4 +51,12 @@ retrieve_keys() {
   fi
 }
 
-main "$1"
+case "$1" in
+  --help)
+    usage
+    exit 0
+    ;;
+  *)
+    main "$1"
+    ;;
+esac
